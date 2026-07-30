@@ -1,0 +1,65 @@
+name: Claude Issue Triage
+
+on:
+  issues:
+    types: [opened, edited]
+
+concurrency:
+  group: issue-triage-${{ github.event.issue.number }}
+  cancel-in-progress: true
+
+jobs:
+  triage:
+    if: github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      id-token: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Run Claude issue triage
+        uses: anthropics/claude-code-action@v1
+        with:
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          claude_args: >-
+            --allowed-tools "Bash(gh issue view:*),Bash(gh issue edit:*),Bash(gh issue comment:*),Bash(gh label list:*),Bash(gh label create:*)"
+          prompt: |
+            Eres el asistente de triaje de issues de este repositorio (un juego de
+            Tetris en JavaScript vanilla: game.js, index.html, style.css).
+
+            El issue a analizar es el número ${{ github.event.issue.number }} del
+            repositorio ${{ github.repository }}. Léelo con:
+              gh issue view ${{ github.event.issue.number }} --json title,body,labels
+
+            Tu tarea (responde y escribe SIEMPRE en español):
+
+            1) LABELS. Catálogo base (crea el que falte antes de asignarlo):
+               - bug: comportamiento incorrecto del juego
+               - enhancement: nueva funcionalidad o mejora
+               - question: duda o solicitud de aclaración
+               - documentation: cambios en documentación
+               - ui: apariencia, estilos, canvas, layout
+               - gameplay: mecánicas de juego (piezas, rotación, colisiones, puntaje)
+               - performance: rendimiento / render loop
+               - needs-info: falta información para reproducir/entender
+               - good first issue: tarea sencilla para empezar
+               Crea los que falten (idempotente, ignora el error si ya existe):
+                 gh label create "<nombre>" --description "<desc>" --color <hex> || true
+               Luego asigna los que apliquen:
+                 gh issue edit ${{ github.event.issue.number }} --add-label "<a>,<b>"
+
+            2) DIAGNÓSTICO. Publica UN solo comentario en español con estas secciones:
+               ## Resumen
+               ## Causa raíz probable
+               ## Áreas/archivos afectados   (referencia game.js/index.html/style.css)
+               ## Enfoque de solución propuesto
+               ## Pasos de implementación
+               Usa:
+                 gh issue comment ${{ github.event.issue.number }} --body "..."
+
+            NO modifiques código ni abras PRs. Solo etiqueta y comenta el diagnóstico.
