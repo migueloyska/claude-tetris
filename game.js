@@ -28,6 +28,18 @@ const PIECES = [
   [[8,8,8],[8,0,8],[8,8,8]],                  // Nut (tuerca con hueco)
 ];
 
+const PASTEL_COLORS = [
+  null,
+  '#a8e6ea', // I - cyan
+  '#ffe9b3', // O - yellow
+  '#dcb3e0', // T - purple
+  '#c3e8c5', // S - green
+  '#f0b8b8', // Z - red
+  '#b8d4f5', // J - pale blue
+  '#ffd9b3', // L - orange
+  '#d8dee2', // Nut - metallic gray
+];
+
 const LINE_SCORES = [0, 100, 300, 500, 800];
 
 const canvas = document.getElementById('board');
@@ -42,9 +54,11 @@ const overlayTitle = document.getElementById('overlay-title');
 const overlayScore = document.getElementById('overlay-score');
 const restartBtn = document.getElementById('restart-btn');
 const themeSwitch = document.getElementById('theme-switch');
+const skinSelect = document.getElementById('skin-select');
 
 let board, current, next, score, lines, level, paused, gameOver, lastTime, dropAccum, dropInterval, animId;
 let gridLineColor = '#22222e';
+let currentSkin = 'retro';
 
 function applyTheme(theme) {
   document.body.setAttribute('data-theme', theme);
@@ -63,7 +77,28 @@ themeSwitch.addEventListener('change', () => {
   applyTheme(themeSwitch.checked ? 'light' : 'dark');
 });
 
+const VALID_SKINS = ['retro', 'neon', 'pastel', 'pixel'];
+
+function applySkin(skin) {
+  currentSkin = skin;
+  document.body.setAttribute('data-skin', skin);
+  skinSelect.value = skin;
+  localStorage.setItem('tetris-skin', skin);
+  gridLineColor = getComputedStyle(document.body).getPropertyValue('--grid-line').trim();
+  if (current) draw();
+}
+
+function initSkin() {
+  const saved = localStorage.getItem('tetris-skin');
+  applySkin(VALID_SKINS.includes(saved) ? saved : 'retro');
+}
+
+skinSelect.addEventListener('change', () => {
+  applySkin(skinSelect.value);
+});
+
 initTheme();
+initSkin();
 
 function createBoard() {
   return Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
@@ -181,13 +216,69 @@ function updateHUD() {
 
 function drawBlock(context, x, y, colorIndex, size, alpha) {
   if (!colorIndex) return;
-  const color = COLORS[colorIndex];
   context.globalAlpha = alpha ?? 1;
-  context.fillStyle = color;
-  context.fillRect(x * size + 1, y * size + 1, size - 2, size - 2);
-  // highlight
-  context.fillStyle = 'rgba(255,255,255,0.12)';
-  context.fillRect(x * size + 1, y * size + 1, size - 2, 4);
+
+  const px = x * size + 1;
+  const py = y * size + 1;
+  const s = size - 2;
+
+  if (currentSkin === 'neon') {
+    const color = COLORS[colorIndex];
+    context.save();
+    context.shadowBlur = 15;
+    context.shadowColor = color;
+    context.fillStyle = color;
+    context.fillRect(px, py, s, s);
+    context.restore();
+    context.fillStyle = 'rgba(255,255,255,0.15)';
+    context.fillRect(px, py, s, 4);
+  } else if (currentSkin === 'pastel') {
+    const color = PASTEL_COLORS[colorIndex];
+    const r = Math.min(6, s / 3);
+    context.fillStyle = color;
+    context.beginPath();
+    if (typeof context.roundRect === 'function') {
+      context.roundRect(px, py, s, s, r);
+    } else {
+      context.moveTo(px + r, py);
+      context.lineTo(px + s - r, py);
+      context.quadraticCurveTo(px + s, py, px + s, py + r);
+      context.lineTo(px + s, py + s - r);
+      context.quadraticCurveTo(px + s, py + s, px + s - r, py + s);
+      context.lineTo(px + r, py + s);
+      context.quadraticCurveTo(px, py + s, px, py + s - r);
+      context.lineTo(px, py + r);
+      context.quadraticCurveTo(px, py, px + r, py);
+    }
+    context.closePath();
+    context.fill();
+    context.fillStyle = 'rgba(255,255,255,0.3)';
+    context.fillRect(px, py, s, 4);
+  } else if (currentSkin === 'pixel') {
+    const color = COLORS[colorIndex];
+    context.fillStyle = color;
+    context.fillRect(px, py, s, s);
+    // pixel-art texture: checkerboard of darker sub-squares
+    const sub = Math.max(2, s / 4);
+    context.fillStyle = 'rgba(0,0,0,0.18)';
+    for (let sr = 0; sr < 4; sr++) {
+      for (let sc = 0; sc < 4; sc++) {
+        if ((sr + sc) % 2 === 0) {
+          context.fillRect(px + sc * sub, py + sr * sub, sub, sub);
+        }
+      }
+    }
+    context.fillStyle = 'rgba(255,255,255,0.15)';
+    context.fillRect(px, py, s, 3);
+  } else {
+    // retro (default)
+    const color = COLORS[colorIndex];
+    context.fillStyle = color;
+    context.fillRect(px, py, s, s);
+    context.fillStyle = 'rgba(255,255,255,0.12)';
+    context.fillRect(px, py, s, 4);
+  }
+
   context.globalAlpha = 1;
 }
 
