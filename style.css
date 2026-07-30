@@ -254,3 +254,28 @@ kbd {
 .switch input:checked + .switch-slider::before {
   transform: translateX(18px);
 }
+
+/* ---- Skin selector ---- */
+.skin-select {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.skin-select select {
+  background: var(--kbd-bg);
+  border: 1px solid var(--kbd-border);
+  color: var(--kbd-color);
+  border-radius: 4px;
+  padding: 4px 6px;
+  font-size: 12px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+/* ---- Skins ---- */
+body[data-skin="neon"] {
+  --board-bg: #000000;
+  --grid-line: #101018;
+}
