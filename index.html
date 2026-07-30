@@ -56,7 +56,56 @@
       <div class="overlay-box">
         <p id="overlay-title">GAME OVER</p>
         <p id="overlay-score"></p>
+
+        <div id="name-input-section" class="name-input-section hidden">
+          <p class="hs-prompt">¡Nuevo récord! Ingresa tu nombre:</p>
+          <div class="name-input-row">
+            <input type="text" id="name-input" maxlength="12" placeholder="Nombre" autocomplete="off">
+            <button id="save-name-btn">Guardar</button>
+          </div>
+        </div>
+
+        <div class="highscore-panel">
+          <h2 class="hs-heading">RÉCORDS</h2>
+          <table class="hs-table" id="overlay-hs-table"></table>
+          <div class="hs-stats">
+            <div class="panel-section">
+              <span class="label">MEJOR COMBO</span>
+              <span class="value" id="overlay-best-combo">0</span>
+            </div>
+            <div class="panel-section">
+              <span class="label">LÍNEAS MÁXIMAS</span>
+              <span class="value" id="overlay-best-lines">0</span>
+            </div>
+          </div>
+        </div>
+
         <button id="restart-btn">Reiniciar</button>
+        <button id="reset-records-btn" class="secondary-btn">Reiniciar records</button>
+      </div>
+    </div>
+
+    <div id="start-screen" class="overlay">
+      <div class="overlay-box">
+        <p id="start-title">BIENVENIDO</p>
+
+        <div class="highscore-panel">
+          <h2 class="hs-heading">RÉCORDS</h2>
+          <table class="hs-table" id="start-hs-table"></table>
+          <div class="hs-stats">
+            <div class="panel-section">
+              <span class="label">MEJOR COMBO</span>
+              <span class="value" id="start-best-combo">0</span>
+            </div>
+            <div class="panel-section">
+              <span class="label">LÍNEAS MÁXIMAS</span>
+              <span class="value" id="start-best-lines">0</span>
+            </div>
+          </div>
+        </div>
+
+        <button id="play-btn">Jugar</button>
+        <button id="reset-records-btn-start" class="secondary-btn">Reiniciar records</button>
       </div>
     </div>
   </div>
